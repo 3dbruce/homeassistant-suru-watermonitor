@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Sign in with your SURU WaterMonitor app account.",
+        "data": {
+          "email": "E-mail",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-enter the password for your SURU WaterMonitor account.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid e-mail or password",
+      "cannot_connect": "Failed to connect to the SURU service"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "reauth_successful": "Re-authentication was successful"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "meter_reading": { "name": "Meter reading" },
+      "consumption_today": { "name": "Consumption today" },
+      "water_hardness": { "name": "Water hardness" },
+      "ph_value": { "name": "pH value" },
+      "last_measured": { "name": "Last measured" }
+    },
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" }
+    }
+  }
+}
