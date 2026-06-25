@@ -32,7 +32,7 @@ hourly/daily, so the integration polls the cloud once per hour.
 
 ## Requirements
 
-- Home Assistant **2024.8** or newer
+- Home Assistant **2024.12** or newer
 - A working **SURU WaterMonitor** app account (email + password) with an
   activated meter
 
@@ -54,6 +54,9 @@ Copy `custom_components/suru_water_monitor/` into your Home Assistant
 
 Settings -> Devices & Services -> **Add Integration** -> "SURU WaterMonitor" ->
 enter your app **email** and **password**.
+
+The polling interval (default 60 min, range 5-1440) can be changed any time via
+the integration's **Configure** button (options).
 
 ## Energy dashboard
 

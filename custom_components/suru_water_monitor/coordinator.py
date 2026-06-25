@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SuruApiError, SuruAuthError, SuruWaterApi
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 class SuruCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Fetch unit detail, meter reading and today's consumption per unit."""
 
-    def __init__(self, hass: HomeAssistant, api: SuruWaterApi) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: SuruWaterApi, update_interval: timedelta
+    ) -> None:
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass, _LOGGER, name=DOMAIN, update_interval=update_interval
         )
         self.api = api
 

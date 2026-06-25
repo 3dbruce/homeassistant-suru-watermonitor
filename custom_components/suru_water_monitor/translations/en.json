@@ -24,6 +24,16 @@
       "reauth_successful": "Re-authentication was successful"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Update interval (minutes)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "meter_reading": { "name": "Meter reading" },

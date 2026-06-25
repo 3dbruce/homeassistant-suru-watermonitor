@@ -1,5 +1,4 @@
 """Constants for the SURU WaterMonitor integration."""
-from datetime import timedelta
 
 DOMAIN = "suru_water_monitor"
 
@@ -12,4 +11,8 @@ COGNITO_IDP_URL = f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/"
 # SURU backend (AWS API Gateway, eu-central-1)
 API_BASE = "https://api.freeze.suru-cloud.com/v2"
 
-DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
+# Polling interval (configurable via the options flow), in minutes.
+CONF_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL_MINUTES = 60
+MIN_SCAN_INTERVAL_MINUTES = 5
+MAX_SCAN_INTERVAL_MINUTES = 1440

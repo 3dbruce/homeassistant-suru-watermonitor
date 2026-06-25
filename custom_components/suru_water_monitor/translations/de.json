@@ -24,6 +24,16 @@
       "reauth_successful": "Erneute Anmeldung erfolgreich"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "data": {
+          "scan_interval": "Aktualisierungsintervall (Minuten)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "meter_reading": { "name": "Zaehlerstand" },
