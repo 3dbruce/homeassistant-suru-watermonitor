@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="208" height="208" viewBox="0 0 208 208" role="img" aria-label="SURU WaterMonitor">
+  <defs>
+    <linearGradient id="suruTile" x1="0.289" y1="0.047" x2="0.711" y2="0.953">
+      <stop offset="0" stop-color="#5BC6F7"/>
+      <stop offset="1" stop-color="#0277BD"/>
+    </linearGradient>
+  </defs>
+  <rect width="208" height="208" rx="48" fill="url(#suruTile)"/>
+  <g transform="translate(45 45) scale(1.18)">
+    <path d="M50 7 C50 7 17 45 17 67 A33 33 0 0 0 83 67 C83 45 50 7 50 7 Z" fill="#ffffff"/>
+    <path d="M33 71 A18 18 0 0 1 67 71" fill="none" stroke="#0277BD" stroke-width="4.2" stroke-linecap="round"/>
+    <line x1="50" y1="71" x2="62.5" y2="59.5" stroke="#0277BD" stroke-width="4.2" stroke-linecap="round"/>
+    <circle cx="50" cy="71" r="4" fill="#0277BD"/>
+  </g>
+</svg>

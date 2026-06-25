@@ -1,7 +1,13 @@
-# SURU WaterMonitor for Home Assistant
+<p align="center">
+  <img src="images/icon.png" width="128" alt="SURU WaterMonitor logo">
+</p>
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<h1 align="center">SURU WaterMonitor for Home Assistant</h1>
+
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="hacs"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"></a>
+</p>
 
 Unofficial Home Assistant integration for the **SURU WaterMonitor** smart water
 meter platform (SenseGuard GmbH). It signs in to the SURU cloud with your app
