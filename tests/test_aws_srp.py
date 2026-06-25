@@ -71,8 +71,10 @@ def test_matches_pycognito_reference():
     """The authoritative check: identical key to the proven pycognito impl."""
     ref_mod = pytest.importorskip("pycognito.aws_srp")
     mine = aws_srp.AWSSRP("u@example.com", "Secret1!", POOL, CLIENT)
+    # Pass a dummy client so pycognito does not create a boto3 client (which
+    # would touch a socket - blocked by pytest-socket in the HA test env).
     ref = ref_mod.AWSSRP(
-        "u@example.com", "Secret1!", POOL, CLIENT, pool_region="eu-central-1"
+        "u@example.com", "Secret1!", POOL, CLIENT, client=object()
     )
     ref.small_a_value = mine.small_a_value
     ref.large_a_value = mine.large_a_value
