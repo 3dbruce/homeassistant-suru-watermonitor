@@ -7,11 +7,22 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import SuruApiError, SuruAuthError, SuruWaterApi
 from .const import DOMAIN
+from .statistics import async_import_hourly_consumption
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def unit_name(detail: dict) -> str:
+    """Display name of a unit, e.g. "SURU WaterMonitor Hauptstr. 1"."""
+    address = detail.get("address") or {}
+    label = " ".join(
+        filter(None, [address.get("streetName"), address.get("streetNumber")])
+    )
+    return f"SURU WaterMonitor {label}".strip()
 
 
 class SuruCoordinator(DataUpdateCoordinator[dict[str, dict]]):
@@ -35,7 +46,8 @@ class SuruCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     continue
                 detail = await self.api.async_get_unit(unit_id)
                 reading = await self.api.async_get_reading(unit_id)
-                consumption = await self.api.async_get_consumption(unit_id, "day")
+                today = dt_util.now().date()
+                consumption = await self.api.async_get_consumption(unit_id, "day", today)
                 values = [v for v in (consumption.get("values") or []) if v is not None]
 
                 devices = detail.get("devices") or []
@@ -44,6 +56,14 @@ class SuruCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     incidents = await self.api.async_get_incidents(unit_id, device_id)
                 except SuruApiError:
                     incidents = None  # alarm sensor degrades gracefully
+
+                try:
+                    await async_import_hourly_consumption(
+                        self.hass, self.api, unit_id, unit_name(detail),
+                        today, consumption.get("values") or [],
+                    )
+                except SuruApiError as err:
+                    _LOGGER.warning("Hourly consumption import failed: %s", err)
 
                 data[unit_id] = {
                     "detail": detail,

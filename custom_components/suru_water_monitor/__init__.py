@@ -11,6 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import SuruWaterApi
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
 from .coordinator import SuruCoordinator
+from .statistics import async_clear_hourly_statistics
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
@@ -29,6 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Pre-release builds imported the hourly statistics from 00:00 UTC
+        # instead of local midnight (shifted by the UTC offset). Drop them;
+        # they are re-imported with the right hours on the next update.
+        await async_clear_hourly_statistics(hass)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
     return True
 
 

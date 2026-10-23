@@ -16,3 +16,9 @@ CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL_MINUTES = 60
 MIN_SCAN_INTERVAL_MINUTES = 5
 MAX_SCAN_INTERVAL_MINUTES = 1440
+
+# Hourly consumption -> long-term statistics. The utility delivers its smart-meter
+# data with a delay (often once a day), so every update re-imports the last few
+# days to pick up late hours. On the very first run, history is backfilled.
+STATS_REFRESH_DAYS = 3
+STATS_BACKFILL_DAYS = 30

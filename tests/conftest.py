@@ -18,6 +18,10 @@ if _HA_AVAILABLE:
     pytest_plugins = ["pytest_homeassistant_custom_component"]
 
     @pytest.fixture(autouse=True)
-    def auto_enable_custom_integrations(enable_custom_integrations):
-        """Enable loading the custom integration in every HA test."""
+    def auto_enable_custom_integrations(recorder_mock, enable_custom_integrations):
+        """Enable loading the custom integration in every HA test.
+
+        The integration depends on the recorder (hourly statistics), which must
+        be set up before `hass`, hence `recorder_mock` comes first.
+        """
         yield

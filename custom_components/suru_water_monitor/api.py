@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import aiohttp
 
@@ -137,12 +137,17 @@ class SuruWaterApi:
         now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         return await self._get(f"units/{unit_id}/reading", {"date": now})
 
-    async def async_get_consumption(self, unit_id: str, range_: str = "day") -> dict:
-        start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    async def async_get_consumption(
+        self, unit_id: str, range_: str = "day", day: date | None = None
+    ) -> dict:
+        # range=day answers with one bucket per hour (groupBy=hour), in litres.
+        # The backend only uses the date part of startDate and counts the hours
+        # from local midnight of that day (German time), not from 00:00 UTC.
+        if day is None:
+            day = datetime.now(timezone.utc).date()
         return await self._get(
-            f"units/{unit_id}/consumption", {"range": range_, "startDate": start}
+            f"units/{unit_id}/consumption",
+            {"range": range_, "startDate": f"{day.isoformat()}T00:00:00Z"},
         )
 
     async def async_get_incidents(

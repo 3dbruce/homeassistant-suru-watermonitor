@@ -36,6 +36,19 @@ A device is created per water unit on your account, with these sensors:
 The readings come from your utility's smart meter via SURU and update roughly
 hourly/daily, so the integration polls the cloud once per hour.
 
+### Hourly consumption (long-term statistics)
+
+In addition to the sensors, the hourly consumption buckets (the same values the
+app shows per hour) are imported as an external statistic
+`suru_water_monitor:<unit_id>_consumption` (litres), **with the real hour they
+belong to** - even if the utility delivers the data a day late. On the first run
+the last 30 days are backfilled; every update re-imports the last 3 days so late
+hours are filled in.
+
+Use it in a **Statistics graph** card (period: hour, stat type: change), or add
+it to the Energy dashboard under *Water consumption* instead of the meter
+reading to see water use per hour.
+
 ## Requirements
 
 - Home Assistant **2024.12** or newer

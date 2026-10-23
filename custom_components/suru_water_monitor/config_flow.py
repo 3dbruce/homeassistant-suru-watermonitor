@@ -31,6 +31,7 @@ class SuruConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the SURU WaterMonitor config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

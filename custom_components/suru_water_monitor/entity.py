@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import SuruCoordinator
+from .coordinator import SuruCoordinator, unit_name
 
 
 class SuruEntity(CoordinatorEntity[SuruCoordinator]):
@@ -20,15 +20,11 @@ class SuruEntity(CoordinatorEntity[SuruCoordinator]):
         self._unit_id = unit_id
 
         detail = (coordinator.data.get(unit_id) or {}).get("detail") or {}
-        address = detail.get("address") or {}
-        label = " ".join(
-            filter(None, [address.get("streetName"), address.get("streetNumber")])
-        )
         devices = detail.get("devices") or [{}]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unit_id)},
             manufacturer="SURU / SenseGuard",
-            name=f"SURU WaterMonitor {label}".strip(),
+            name=unit_name(detail),
             model=(devices[0] or {}).get("meterType"),
             serial_number=detail.get("serialNumber"),
         )
