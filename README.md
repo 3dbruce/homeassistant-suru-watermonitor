@@ -20,6 +20,11 @@ for the Home Assistant Energy dashboard.
 > same private cloud API as the official "WaterMonitor" app. The vendor can
 > change or restrict the API at any time. Use at your own risk.
 
+> [!NOTE]
+> This is a fork of
+> [teuffel/homeassistant-suru-watermonitor](https://github.com/teuffel/homeassistant-suru-watermonitor)
+> that adds hourly consumption as long-term statistics.
+
 ## Features
 
 A device is created per water unit on your account, with these sensors:
@@ -60,7 +65,7 @@ reading to see water use per hour.
 ### HACS (custom repository)
 
 1. HACS -> top-right menu -> **Custom repositories**
-2. Add `https://github.com/teuffel/homeassistant-suru-watermonitor`,
+2. Add `https://github.com/3dbruce/homeassistant-suru-watermonitor`,
    category **Integration**
 3. Install **SURU WaterMonitor**, then **restart** Home Assistant
 
