@@ -22,3 +22,9 @@ MAX_SCAN_INTERVAL_MINUTES = 1440
 # days to pick up late hours. On the very first run, history is backfilled.
 STATS_REFRESH_DAYS = 3
 STATS_BACKFILL_DAYS = 30
+
+# Action `import_history`: rebuild the statistic from a start date (one API
+# request per day, so the period is capped).
+SERVICE_IMPORT_HISTORY = "import_history"
+ATTR_START_DATE = "start_date"
+MAX_HISTORY_DAYS = 5 * 366

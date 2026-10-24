@@ -45,5 +45,14 @@
     "binary_sensor": {
       "alarm": { "name": "Alarm" }
     }
+  },
+  "services": {
+    "import_history": {
+      "name": "Verlauf nachladen",
+      "description": "Baut die Statistik des stuendlichen Verbrauchs mit allen Werten neu auf, die die SURU-Cloud seit dem Startdatum hat (eine Anfrage pro Tag, laeuft daher einige Minuten im Hintergrund). Werte vor dem Startdatum werden aus der Statistik entfernt.",
+      "fields": {
+        "start_date": { "name": "Startdatum", "description": "Erster Tag, der geladen wird." }
+      }
+    }
   }
 }

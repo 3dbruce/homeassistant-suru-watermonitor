@@ -9,6 +9,7 @@ app does.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import date, datetime, timedelta, timezone, tzinfo
 
@@ -21,7 +22,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.unit_conversion import VolumeConverter
 
@@ -37,6 +38,13 @@ _LOGGER = logging.getLogger(__name__)
 
 # hass.data key: statistic ids queued for deletion whose old rows must be ignored.
 _CLEARED = f"{DOMAIN}_cleared_statistics"
+# hass.data key: per-statistic locks, so a history rebuild and the regular
+# import never compute running sums from each other's half-written rows.
+_LOCKS = f"{DOMAIN}_statistics_locks"
+
+
+def _lock(hass: HomeAssistant, stat_id: str) -> asyncio.Lock:
+    return hass.data.setdefault(_LOCKS, {}).setdefault(stat_id, asyncio.Lock())
 
 
 def statistic_id(unit_id: str) -> str:
@@ -54,9 +62,10 @@ def hourly_series(
     """Flatten per-day hourly buckets into (UTC hour start, litres), oldest first.
 
     Bucket 0 is local midnight of that day in `tz`; counting in UTC hours keeps
-    23/25-hour days around DST changes right. Hours that have not ended yet, and
-    trailing hours without data (not yet delivered by the utility), are dropped.
-    Gaps in between count as 0 L so the running sum stays contiguous.
+    23/25-hour days around DST changes right. Hours that have not ended yet,
+    trailing hours without data (not yet delivered by the utility) and leading
+    ones (before the meter was activated) are dropped. Gaps in between count as
+    0 L so the running sum stays contiguous.
     """
     series: list[tuple[datetime, float | None]] = []
     for day, values in days:
@@ -69,6 +78,8 @@ def hourly_series(
             series.append((start, value))
     while series and series[-1][1] is None:
         series.pop()
+    while series and series[0][1] is None:
+        series.pop(0)
     return [(start, float(value or 0)) for start, value in series]
 
 
@@ -116,6 +127,23 @@ async def async_import_hourly_consumption(
     `today` is the local date whose buckets the caller already fetched.
     """
     stat_id = statistic_id(unit_id)
+    lock = _lock(hass, stat_id)
+    if lock.locked():
+        _LOGGER.debug("History import running for %s, skipping update", stat_id)
+        return
+    async with lock:
+        await _async_import_recent(hass, api, unit_id, name, today, today_values)
+
+
+async def _async_import_recent(
+    hass: HomeAssistant,
+    api: SuruWaterApi,
+    unit_id: str,
+    name: str,
+    today: date,
+    today_values: list,
+) -> None:
+    stat_id = statistic_id(unit_id)
     tz = dt_util.get_default_time_zone()
     oldest = today - timedelta(days=STATS_BACKFILL_DAYS - 1)
 
@@ -136,16 +164,7 @@ async def async_import_hourly_consumption(
     else:
         first_day = oldest
 
-    days: list[tuple[date, list]] = []
-    day = first_day
-    while day < today:
-        try:
-            consumption = await api.async_get_consumption(unit_id, "day", day)
-        except SuruApiError as err:
-            _LOGGER.debug("No hourly consumption for %s on %s: %s", unit_id, day, err)
-        else:
-            days.append((day, consumption.get("values") or []))
-        day += timedelta(days=1)
+    days = await _async_fetch_days(api, unit_id, first_day, today)
     days.append((today, today_values))
 
     series = hourly_series(days, dt_util.utcnow(), tz)
@@ -154,6 +173,36 @@ async def async_import_hourly_consumption(
     total = (
         await _async_sum_before(hass, stat_id, series[0][0]) if last.get(stat_id) else 0.0
     )
+    _async_write(hass, stat_id, name, series, total)
+    cleared.discard(stat_id)
+
+
+async def _async_fetch_days(
+    api: SuruWaterApi, unit_id: str, first_day: date, end: date
+) -> list[tuple[date, list]]:
+    """Hourly buckets for each local day in [first_day, end)."""
+    days: list[tuple[date, list]] = []
+    day = first_day
+    while day < end:
+        try:
+            consumption = await api.async_get_consumption(unit_id, "day", day)
+        except SuruApiError as err:
+            _LOGGER.debug("No hourly consumption for %s on %s: %s", unit_id, day, err)
+        else:
+            days.append((day, consumption.get("values") or []))
+        day += timedelta(days=1)
+    return days
+
+
+@callback
+def _async_write(
+    hass: HomeAssistant,
+    stat_id: str,
+    name: str,
+    series: list[tuple[datetime, float]],
+    total: float,
+) -> None:
+    """Queue the series as statistics, continuing the running sum from `total`."""
     statistics: list[StatisticData] = []
     for start, litres in series:
         total += litres
@@ -163,7 +212,32 @@ async def async_import_hourly_consumption(
         len(statistics), stat_id, series[0][0], series[-1][0],
     )
     async_add_external_statistics(hass, _metadata(stat_id, name), statistics)
-    cleared.discard(stat_id)
+
+
+async def async_rebuild_hourly_consumption(
+    hass: HomeAssistant, api: SuruWaterApi, unit_id: str, name: str, start: date
+) -> list[tuple[datetime, float]]:
+    """Replace a unit's statistic with all hourly buckets since `start`.
+
+    Fetches one day per request, so this takes a while for long periods; run
+    it in the background. Returns the imported series (empty: nothing changed).
+    """
+    stat_id = statistic_id(unit_id)
+    async with _lock(hass, stat_id):
+        today = dt_util.now().date()
+        days = await _async_fetch_days(api, unit_id, start, today + timedelta(days=1))
+        series = hourly_series(days, dt_util.utcnow(), dt_util.get_default_time_zone())
+        if not series:
+            return series
+        recorder = get_instance(hass)
+        # A running sum only works from the very first row, so start over.
+        recorder.async_clear_statistics([stat_id])
+        _async_write(hass, stat_id, name, series, 0.0)
+        hass.data.get(_CLEARED, set()).discard(stat_id)
+        # Keep the lock until the rows are in the database, so the next
+        # regular import continues from the rebuilt sums.
+        await recorder.async_block_till_done()
+    return series
 
 
 async def async_clear_hourly_statistics(hass: HomeAssistant) -> None:

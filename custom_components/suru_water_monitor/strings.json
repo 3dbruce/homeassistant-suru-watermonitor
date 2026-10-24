@@ -45,5 +45,14 @@
     "binary_sensor": {
       "alarm": { "name": "Alarm" }
     }
+  },
+  "services": {
+    "import_history": {
+      "name": "Load history",
+      "description": "Rebuilds the hourly consumption statistic with all values the SURU cloud has since the start date (one request per day, so this runs in the background for a few minutes). Values before the start date are removed from the statistic.",
+      "fields": {
+        "start_date": { "name": "Start date", "description": "First day to load." }
+      }
+    }
   }
 }

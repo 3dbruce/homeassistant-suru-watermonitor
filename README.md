@@ -54,6 +54,12 @@ Use it in a **Statistics graph** card (period: hour, stat type: change), or add
 it to the Energy dashboard under *Water consumption* instead of the meter
 reading to see water use per hour.
 
+To load more than 30 days, run the action **SURU WaterMonitor: Load history**
+(`suru_water_monitor.import_history`, Developer tools -> Actions) with a start
+date. It rebuilds the statistic from that day on in the background (one request
+per day, up to 5 years) and reports via a notification how far back the SURU
+cloud has data. Values before the start date are removed from the statistic.
+
 ## Requirements
 
 - Home Assistant **2024.12** or newer
